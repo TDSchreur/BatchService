@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl;
+using Quartz.Logging;
 using Quartz.Spi;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -54,6 +55,7 @@ namespace Worker
                            services.AddSingleton<IJobFactory, JobFactory>();
                            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
                            services.AddSingleton<QuartzJobRunner>();
+                           services.AddSingleton<ILogProvider, QuartzLogProvider>();
 
                            services.AddTransient<HelloWorldJob>();
                            services.AddSingleton(new JobSchedule(typeof(HelloWorldJob), "0/5 * * * * ?"));
