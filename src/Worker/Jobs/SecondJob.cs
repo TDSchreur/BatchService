@@ -7,12 +7,12 @@ using Quartz;
 namespace Worker.Jobs
 {
     [DisallowConcurrentExecution]
-    public class HelloWorldJob : IJob, IDisposable
+    public class SecondJob : IJob, IDisposable
     {
-        private readonly ILogger<HelloWorldJob> _logger;
+        private readonly ILogger<SecondJob> _logger;
         private string _jobName;
 
-        public HelloWorldJob(ILogger<HelloWorldJob> logger)
+        public SecondJob(ILogger<SecondJob> logger)
         {
             _logger = logger;
         }

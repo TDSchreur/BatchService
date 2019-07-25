@@ -1,14 +1,15 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using Quartz.Impl;
 using Quartz.Logging;
 using Quartz.Spi;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using Worker.Config;
 using Worker.Jobs;
 
 namespace Worker
@@ -43,6 +44,13 @@ namespace Worker
         {
             return Host.CreateDefaultBuilder(args)
                        .UseWindowsService()
+                       .ConfigureAppConfiguration((context, builder) =>
+                       {
+                           builder.AddJsonFile("appsettings.json", false, true);
+
+                           context.Configuration = builder.Build();
+
+                       })
                        .ConfigureLogging(builder =>
                        {
                            builder.ClearProviders();
@@ -50,15 +58,20 @@ namespace Worker
                        })
                        .ConfigureServices((hostContext, services) =>
                        {
+
+                           services.AddOptions();
+                           services.Configure<JobSchedules>(hostContext.Configuration.GetSection("JobSchedules"));
+
                            services.AddHostedService<ServiceWorker>();
 
                            services.AddSingleton<IJobFactory, JobFactory>();
-                           services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+                           services.AddSingleton<ISchedulerFactory, SchedulerFactory>();
                            services.AddSingleton<QuartzJobRunner>();
                            services.AddSingleton<ILogProvider, QuartzLogProvider>();
 
+                           services.AddTransient<UpdateTriggerJob>();
                            services.AddTransient<HelloWorldJob>();
-                           services.AddSingleton(new JobSchedule(typeof(HelloWorldJob), "0/5 * * * * ?"));
+                           services.AddTransient<SecondJob>();
                        });
         }
     }
