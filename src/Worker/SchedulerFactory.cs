@@ -19,12 +19,12 @@ namespace Worker
             _logProvider = logProvider;
             _jobFactory = jobFactory;
         }
-        public override Task<IReadOnlyList<IScheduler>> GetAllSchedulers(CancellationToken cancellationToken = new CancellationToken())
+        public override Task<IReadOnlyList<IScheduler>> GetAllSchedulers(CancellationToken cancellationToken = default)
         {
             throw new System.NotImplementedException();
         }
 
-        public override async Task<IScheduler> GetScheduler(CancellationToken cancellationToken = new CancellationToken())
+        public override async Task<IScheduler> GetScheduler(CancellationToken cancellationToken = default)
         {
             if (_scheduler == null)
             {
@@ -36,7 +36,7 @@ namespace Worker
             return _scheduler;
         }
 
-        public override Task<IScheduler> GetScheduler(string schedName, CancellationToken cancellationToken = new CancellationToken())
+        public override Task<IScheduler> GetScheduler(string schedName, CancellationToken cancellationToken = default)
         {
             throw new System.NotImplementedException();
         }

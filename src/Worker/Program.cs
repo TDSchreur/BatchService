@@ -61,6 +61,7 @@ namespace Worker
 
                            services.AddOptions();
                            services.Configure<JobSchedules>(hostContext.Configuration.GetSection("JobSchedules"));
+                           services.AddTransient<IJobSchedulesProvider, JobSchedulesProvider>();
 
                            services.AddHostedService<ServiceWorker>();
 

@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Quartz;
 using Worker.Config;
 
@@ -12,17 +11,17 @@ namespace Worker
     public class ServiceWorker : IHostedService
     {
         private readonly ISchedulerFactory _schedulerFactory;
+        private readonly IJobSchedulesProvider _jobSchedulesProvider;
         private readonly ILogger<ServiceWorker> _logger;
-        private readonly JobSchedules _jobSchedules;
 
         private IScheduler _scheduler;
 
         public ServiceWorker(ISchedulerFactory schedulerFactory,
-                             IOptionsMonitor<JobSchedules> jobConfigs,
+                             IJobSchedulesProvider jobSchedulesProvider,
                              ILogger<ServiceWorker> logger)
         {
             _schedulerFactory = schedulerFactory;
-            _jobSchedules = jobConfigs.CurrentValue;
+            _jobSchedulesProvider = jobSchedulesProvider;
             _logger = logger;
         }
 
@@ -30,7 +29,7 @@ namespace Worker
         {
             _scheduler = await _schedulerFactory.GetScheduler(cancellationToken); 
 
-            foreach (var jobSchedule in _jobSchedules.Jobs)
+            foreach (var jobSchedule in _jobSchedulesProvider.Jobs)
             {
                 IJobDetail job = CreateJob(jobSchedule);
                 ITrigger trigger = CreateTrigger(jobSchedule);

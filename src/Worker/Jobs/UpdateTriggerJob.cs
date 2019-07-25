@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Quartz;
 using Quartz.Impl.Triggers;
 using Worker.Config;
@@ -11,22 +10,22 @@ namespace Worker.Jobs
     public class UpdateTriggerJob : IJob
     {
         private readonly ISchedulerFactory _schedulerFactory;
+        private readonly IJobSchedulesProvider _jobSchedulesProvider;
         private readonly ILogger<UpdateTriggerJob> _logger;
-        private readonly JobSchedules _jobSchedules;
 
         public UpdateTriggerJob(ISchedulerFactory schedulerFactory,
-                                IOptionsMonitor<JobSchedules> jobConfig,
+                                IJobSchedulesProvider jobSchedulesProvider,
                                 ILogger<UpdateTriggerJob> logger)
         {
             _schedulerFactory = schedulerFactory;
+            _jobSchedulesProvider = jobSchedulesProvider;
             _logger = logger;
-            _jobSchedules = jobConfig.CurrentValue;
         }
         public async Task Execute(IJobExecutionContext context)
         {
             var scheduler = await _schedulerFactory.GetScheduler();
 
-            foreach (var jobSchedule in _jobSchedules.Jobs)
+            foreach (var jobSchedule in _jobSchedulesProvider.Jobs)
             {
                 var triggerKey = new TriggerKey($"{jobSchedule.Type.FullName}.trigger");
                 var trigger = await scheduler.GetTrigger(triggerKey) as CronTriggerImpl;
