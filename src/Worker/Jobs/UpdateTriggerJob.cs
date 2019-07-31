@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl.Triggers;
-using Worker.Config;
 
 namespace Worker.Jobs
 {
@@ -23,12 +22,12 @@ namespace Worker.Jobs
         }
         public async Task Execute(IJobExecutionContext context)
         {
-            var scheduler = await _schedulerFactory.GetScheduler();
+            var scheduler = await _schedulerFactory.GetScheduler().ConfigureAwait(false);
 
             foreach (var jobSchedule in _jobSchedulesProvider.Jobs)
             {
                 var triggerKey = new TriggerKey($"{jobSchedule.Type.FullName}.trigger");
-                var trigger = await scheduler.GetTrigger(triggerKey) as CronTriggerImpl;
+                var trigger = await scheduler.GetTrigger(triggerKey).ConfigureAwait(false) as CronTriggerImpl;
 
                 if (trigger.CronExpressionString == jobSchedule.Cron)
                     continue;
@@ -37,7 +36,7 @@ namespace Worker.Jobs
 
                 trigger.CronExpressionString = jobSchedule.Cron;
 
-                await scheduler.RescheduleJob(triggerKey, trigger);
+                await scheduler.RescheduleJob(triggerKey, trigger).ConfigureAwait(false);
             }
         }
     }

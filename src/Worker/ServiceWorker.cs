@@ -27,26 +27,26 @@ namespace Worker
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _scheduler = await _schedulerFactory.GetScheduler(cancellationToken); 
+            _scheduler = await _schedulerFactory.GetScheduler(cancellationToken).ConfigureAwait(false); 
 
             foreach (var jobSchedule in _jobSchedulesProvider.Jobs)
             {
                 IJobDetail job = CreateJob(jobSchedule);
                 ITrigger trigger = CreateTrigger(jobSchedule);
+                
+                _logger.LogInformation("Scheduling job {jobKey} with cron {cron}", job.Key, jobSchedule.Cron);
 
-                _logger.LogInformation("Scheduling job {jobName} with cron {cron}", jobSchedule.Type.Name, jobSchedule.Cron);
-
-                await _scheduler.ScheduleJob(job, trigger, cancellationToken);
+                await _scheduler.ScheduleJob(job, trigger, cancellationToken).ConfigureAwait(false);
             }
 
-            await _scheduler.Start(cancellationToken);
+            await _scheduler.Start(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             if (_scheduler != null)
             {
-                await _scheduler.Shutdown(cancellationToken);
+                await _scheduler.Shutdown(cancellationToken).ConfigureAwait(false);
             }
         }
 

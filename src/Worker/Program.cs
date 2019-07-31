@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,7 +30,7 @@ namespace Worker
 
             try
             {
-                await CreateHostBuilder(args).Build().RunAsync();
+                await CreateHostBuilder(args).Build().RunAsync().ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -46,19 +47,27 @@ namespace Worker
                        .UseWindowsService()
                        .ConfigureAppConfiguration((context, builder) =>
                        {
-                           builder.AddJsonFile("appsettings.json", false, true);
+                           var env = context.HostingEnvironment;
+
+                           builder.AddJsonFile("appsettings.json", false, true)
+                                  .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+                                  .AddEnvironmentVariables()
+                                  .AddCommandLine(args);
+
+                           if (env.IsDevelopment())
+                           {
+                               builder.AddUserSecrets<ServiceWorker>();
+                           }
 
                            context.Configuration = builder.Build();
-
                        })
-                       .ConfigureLogging(builder =>
+                       .ConfigureLogging((context, builder) =>
                        {
                            builder.ClearProviders();
                            builder.AddSerilog(Log.Logger);
                        })
                        .ConfigureServices((hostContext, services) =>
                        {
-
                            services.AddOptions();
                            services.Configure<JobSchedules>(hostContext.Configuration.GetSection("JobSchedules"));
                            services.AddTransient<IJobSchedulesProvider, JobSchedulesProvider>();
@@ -73,7 +82,12 @@ namespace Worker
                            services.AddTransient<UpdateTriggerJob>();
                            services.AddTransient<HelloWorldJob>();
                            services.AddTransient<SecondJob>();
+                       })
+                       .ConfigureWebHostDefaults(webBuilder =>
+                       {
+                           webBuilder.UseStartup<Startup>();
                        });
+           
         }
     }
 }

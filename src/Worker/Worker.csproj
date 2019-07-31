@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <OutputType>Exe</OutputType>
     <UserSecretsId>dotnet-Worker-216B3F75-6E01-47EC-81BC-AFD1F0D70256</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" Version="3.0.0-preview3-19153-02" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0-preview7.19362.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="3.0.0-preview7.19362.4" />
     <PackageReference Include="Quartz" Version="3.0.7" />

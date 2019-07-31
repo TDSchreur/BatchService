@@ -28,7 +28,7 @@ namespace Worker
         {
             if (_scheduler == null)
             {
-                _scheduler = await base.GetScheduler(cancellationToken);
+                _scheduler = await base.GetScheduler(cancellationToken).ConfigureAwait(false);
                 LogProvider.SetCurrentLogProvider(_logProvider);
                 _scheduler.JobFactory = _jobFactory;
             }

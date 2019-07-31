@@ -5,6 +5,6 @@ namespace Worker
 {
     public interface IJobSchedulesProvider
     {
-        IEnumerable<JobSchedule> Jobs { get; }
+        IReadOnlyList<JobSchedule> Jobs { get; }
     }
 }

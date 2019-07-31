@@ -21,7 +21,7 @@ namespace Worker
             using var scope = _serviceProvider.CreateScope();
             if (scope.ServiceProvider.GetRequiredService(context.JobDetail.JobType) is IJob job)
             {
-                await job.Execute(context);
+                await job.Execute(context).ConfigureAwait(false);
             }
         }
     }

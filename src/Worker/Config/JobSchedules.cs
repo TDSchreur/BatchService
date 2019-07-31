@@ -4,6 +4,6 @@ namespace Worker.Config
 {
     public class JobSchedules
     {
-        public IEnumerable<JobSchedule> Jobs { get; set; }
+        public IReadOnlyList<JobSchedule> Jobs { get; set; }
     }
 }

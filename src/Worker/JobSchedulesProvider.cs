@@ -9,9 +9,14 @@ namespace Worker
         private readonly JobSchedules _jobSchedules;
         public JobSchedulesProvider(IOptionsMonitor<JobSchedules> jobConfig)
         {
+            if (jobConfig is null)
+            {
+                throw new System.ArgumentNullException(nameof(jobConfig));
+            }
+
             _jobSchedules = jobConfig.CurrentValue;
         }
 
-        public IEnumerable<JobSchedule> Jobs => _jobSchedules.Jobs;
+        public IReadOnlyList<JobSchedule> Jobs => _jobSchedules.Jobs;
     }
 }
