@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Worker.Config
+namespace Worker.Core
 {
     public class JobSchedules
     {

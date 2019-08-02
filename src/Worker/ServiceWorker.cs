@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
-using Worker.Config;
+using Worker.Core;
 
 namespace Worker
 {
     public class ServiceWorker : IHostedService
     {
-        private readonly ISchedulerFactory _schedulerFactory;
         private readonly IJobSchedulesProvider _jobSchedulesProvider;
         private readonly ILogger<ServiceWorker> _logger;
+        private readonly ISchedulerFactory _schedulerFactory;
 
         private IScheduler _scheduler;
 
@@ -27,13 +27,13 @@ namespace Worker
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            _scheduler = await _schedulerFactory.GetScheduler(cancellationToken).ConfigureAwait(false); 
+            _scheduler = await _schedulerFactory.GetScheduler(cancellationToken).ConfigureAwait(false);
 
-            foreach (var jobSchedule in _jobSchedulesProvider.Jobs)
+            foreach (JobSchedule jobSchedule in _jobSchedulesProvider.Jobs)
             {
                 IJobDetail job = CreateJob(jobSchedule);
                 ITrigger trigger = CreateTrigger(jobSchedule);
-                
+
                 _logger.LogInformation("Scheduling job {jobKey} with cron {cron}", job.Key, jobSchedule.Cron);
 
                 await _scheduler.ScheduleJob(job, trigger, cancellationToken).ConfigureAwait(false);

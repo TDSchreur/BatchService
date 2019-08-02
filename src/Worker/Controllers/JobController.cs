@@ -3,17 +3,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Quartz;
+using Worker.Core;
 using Worker.Jobs;
 
 namespace Worker.Controllers
 {
     [Route("api/[controller]")]
-    public class ScheduleController : ControllerBase
+    public class JobController : ControllerBase
     {
-        private readonly ISchedulerFactory _schedulerFactory;
         private readonly IJobSchedulesProvider _jobSchedulesProvider;
+        private readonly ISchedulerFactory _schedulerFactory;
 
-        public ScheduleController(
+        public JobController(
             ISchedulerFactory schedulerFactory,
             IJobSchedulesProvider jobSchedulesProvider)
         {
@@ -24,14 +25,10 @@ namespace Worker.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<JobModel>> Get()
         {
-            var jobs = _jobSchedulesProvider.Jobs
-                                           .Where(x => x.Type != typeof(UpdateTriggerJob))
-                                           .Select(x => new JobModel
-                                           {
-                                               Name = x.Name,
-                                               Cron = x.Cron
-                                           })
-                                           .ToList();
+            List<JobModel> jobs = _jobSchedulesProvider.Jobs
+                                                       .Where(x => x.Type != typeof(UpdateTriggerJob))
+                                                       .Select(x => new JobModel {Name = x.Name, Cron = x.Cron})
+                                                       .ToList();
 
             return Ok(jobs);
         }
@@ -39,16 +36,16 @@ namespace Worker.Controllers
         [HttpGet("start/{jobName}")]
         public async Task<ActionResult> Start(string jobName)
         {
-            var job = _jobSchedulesProvider.Jobs.FirstOrDefault(x => x.Name == jobName);
+            JobSchedule job = _jobSchedulesProvider.Jobs.FirstOrDefault(x => x.Name == jobName);
 
             if (job == null)
             {
                 return NotFound();
             }
 
-            var scheduler = await _schedulerFactory.GetScheduler().ConfigureAwait(false);
+            IScheduler scheduler = await _schedulerFactory.GetScheduler().ConfigureAwait(false);
 
-            var jobKey = new JobKey(job.Type.FullName);
+            JobKey jobKey = new JobKey(job.Type.FullName);
             await scheduler.TriggerJob(jobKey).ConfigureAwait(false);
 
             return Ok();

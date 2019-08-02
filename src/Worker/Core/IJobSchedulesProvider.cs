@@ -1,7 +1,6 @@
 using System.Collections.Generic;
-using Worker.Config;
 
-namespace Worker
+namespace Worker.Core
 {
     public interface IJobSchedulesProvider
     {

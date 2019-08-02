@@ -10,7 +10,7 @@ using Quartz.Logging;
 using Quartz.Spi;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
-using Worker.Config;
+using Worker.Core;
 using Worker.Jobs;
 
 namespace Worker
@@ -47,7 +47,7 @@ namespace Worker
                        .UseWindowsService()
                        .ConfigureAppConfiguration((context, builder) =>
                        {
-                           var env = context.HostingEnvironment;
+                           IHostEnvironment env = context.HostingEnvironment;
 
                            builder.AddJsonFile("appsettings.json", false, true)
                                   .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
@@ -80,14 +80,13 @@ namespace Worker
                            services.AddSingleton<ILogProvider, QuartzLogProvider>();
 
                            services.AddTransient<UpdateTriggerJob>();
-                           services.AddTransient<HelloWorldJob>();
-                           services.AddTransient<SecondJob>();
+                           services.AddTransient<SubmitCommandsJob>();
+                           services.AddTransient<GetCommandsJob>();
                        })
                        .ConfigureWebHostDefaults(webBuilder =>
                        {
                            webBuilder.UseStartup<Startup>();
                        });
-           
         }
     }
 }

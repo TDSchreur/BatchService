@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 
-namespace Worker
+namespace Worker.Core
 {
     public class QuartzJobRunner : IJob
     {
@@ -16,9 +16,12 @@ namespace Worker
 
         public async Task Execute(IJobExecutionContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
-            using var scope = _serviceProvider.CreateScope();
+            using IServiceScope scope = _serviceProvider.CreateScope();
             if (scope.ServiceProvider.GetRequiredService(context.JobDetail.JobType) is IJob job)
             {
                 await job.Execute(context).ConfigureAwait(false);

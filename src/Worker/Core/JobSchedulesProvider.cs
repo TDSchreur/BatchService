@@ -1,17 +1,18 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Options;
-using Worker.Config;
 
-namespace Worker
+namespace Worker.Core
 {
     public class JobSchedulesProvider : IJobSchedulesProvider
     {
         private readonly JobSchedules _jobSchedules;
+
         public JobSchedulesProvider(IOptionsMonitor<JobSchedules> jobConfig)
         {
             if (jobConfig is null)
             {
-                throw new System.ArgumentNullException(nameof(jobConfig));
+                throw new ArgumentNullException(nameof(jobConfig));
             }
 
             _jobSchedules = jobConfig.CurrentValue;
