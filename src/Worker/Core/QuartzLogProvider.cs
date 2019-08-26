@@ -4,7 +4,7 @@ using Quartz.Logging;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using QuartzLogLevel = Quartz.Logging.LogLevel;
 
-namespace Worker
+namespace Worker.Core
 {
     public class QuartzLogProvider : ILogProvider
     {
@@ -14,14 +14,18 @@ namespace Worker
         {
             _logger = logger;
         }
+
         public Logger GetLogger(string name)
         {
             return (level, func, exception, parameters) =>
             {
-                if (func == null) return true;
-
-                var logLevel = level switch
+                if (func == null)
                 {
+                    return true;
+                }
+
+                LogLevel logLevel = level switch
+                    {
                     QuartzLogLevel.Trace => LogLevel.Trace,
                     QuartzLogLevel.Debug => LogLevel.Debug,
                     QuartzLogLevel.Info => LogLevel.Information,
@@ -29,7 +33,7 @@ namespace Worker
                     QuartzLogLevel.Error => LogLevel.Error,
                     QuartzLogLevel.Fatal => LogLevel.Critical,
                     _ => throw new ArgumentOutOfRangeException(nameof(level), level, null),
-                };
+                    };
 
                 _logger.Log(logLevel, exception, func(), parameters);
 

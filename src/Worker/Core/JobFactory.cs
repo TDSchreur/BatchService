@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Spi;
 
-namespace Worker
+namespace Worker.Core
 {
     public class JobFactory : IJobFactory
     {

@@ -1,10 +1,9 @@
 using System.Collections.Generic;
-using Worker.Config;
 
-namespace Worker
+namespace Worker.Core
 {
     public interface IJobSchedulesProvider
     {
-        IEnumerable<JobSchedule> Jobs { get; }
+        IReadOnlyList<JobSchedule> Jobs { get; }
     }
 }

@@ -7,22 +7,31 @@ using Quartz;
 namespace Worker.Jobs
 {
     [DisallowConcurrentExecution]
-    public class HelloWorldJob : IJob, IDisposable
+    public class GetCommandsJob : IJob, IDisposable
     {
-        private readonly ILogger<HelloWorldJob> _logger;
+        private readonly ILogger<GetCommandsJob> _logger;
         private string _jobName;
 
-        public HelloWorldJob(ILogger<HelloWorldJob> logger)
+        public GetCommandsJob(ILogger<GetCommandsJob> logger)
         {
             _logger = logger;
         }
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         public Task Execute(IJobExecutionContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
 
             _jobName = context.JobDetail.Description;
-            var lastRun = context.PreviousFireTimeUtc?.DateTime.ToLocalTime().ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            string lastRun = context.PreviousFireTimeUtc?.DateTime.ToLocalTime().ToString(CultureInfo.InvariantCulture) ?? string.Empty;
             _logger.LogInformation("Greetings from {jobName}! Previous run: {lastRun}", _jobName, lastRun);
 
             return Task.CompletedTask;
@@ -32,14 +41,8 @@ namespace Worker.Jobs
         {
             if (disposing)
             {
-                //_logger.LogInformation("Disposing {jobName}", _jobName);
+                _logger.LogDebug("Disposing {jobName}", _jobName);
             }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }
