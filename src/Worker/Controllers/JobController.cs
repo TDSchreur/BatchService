@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Quartz;
+using Worker.Controllers.Messages;
 using Worker.Core;
 using Worker.Jobs;
 
@@ -49,13 +50,6 @@ namespace Worker.Controllers
             await scheduler.TriggerJob(jobKey).ConfigureAwait(false);
 
             return Ok();
-        }
-
-        public class JobModel
-        {
-            public string Name { get; set; }
-
-            public string Cron { get; set; }
         }
     }
 }
