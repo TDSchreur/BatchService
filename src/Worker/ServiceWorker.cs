@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -46,7 +47,18 @@ namespace Worker
         {
             if (_scheduler != null)
             {
-                await _scheduler.Shutdown(cancellationToken).ConfigureAwait(false);
+                var runningJobs = await _scheduler.GetCurrentlyExecutingJobs(cancellationToken);
+
+                var tasks = runningJobs.Select(job => _scheduler.Interrupt(job.JobDetail.Key, cancellationToken))
+                                       .Cast<Task>()
+                                       .ToList();
+
+                await Task.WhenAll(tasks);
+
+                var shutdown = _scheduler.Shutdown(true, cancellationToken);
+
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+                await Task.WhenAny(shutdown, Task.Delay(Timeout.Infinite, cts.Token));
             }
         }
 

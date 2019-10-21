@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -30,7 +31,11 @@ namespace Worker
 
             try
             {
-                await CreateHostBuilder(args).Build().RunAsync().ConfigureAwait(false);
+                var host = CreateHostBuilder(args).Build();
+
+                await host.RunAsync()
+                          .ContinueWith(task => { })
+                          .ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -43,50 +48,57 @@ namespace Worker
 
         public static IHostBuilder CreateHostBuilder(string[] args)
         {
-            return Host.CreateDefaultBuilder(args)
-                       .UseWindowsService()
-                       .ConfigureAppConfiguration((context, builder) =>
+            return new HostBuilder() //Host//.CreateDefaultBuilder(args)
+                   .UseContentRoot(Directory.GetCurrentDirectory())
+                   .UseWindowsService()
+                   .ConfigureAppConfiguration((context, builder) =>
+                   {
+                       IHostEnvironment env = context.HostingEnvironment;
+
+                       builder.AddJsonFile("appsettings.json", false, true)
+                              .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+                              .AddEnvironmentVariables()
+                              .AddCommandLine(args);
+
+                       if (env.IsDevelopment())
                        {
-                           IHostEnvironment env = context.HostingEnvironment;
+                           builder.AddUserSecrets<ServiceWorker>();
+                       }
 
-                           builder.AddJsonFile("appsettings.json", false, true)
-                                  .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
-                                  .AddEnvironmentVariables()
-                                  .AddCommandLine(args);
+                       context.Configuration = builder.Build();
+                   })
+                   .ConfigureLogging((context, builder) =>
+                   {
+                       builder.ClearProviders();
+                       builder.AddSerilog(Log.Logger);
+                   })
+                   .UseDefaultServiceProvider((context, options) =>
+                   {
+                       var isDevelopment = context.HostingEnvironment.IsDevelopment();
+                       options.ValidateScopes = isDevelopment;
+                       options.ValidateOnBuild = isDevelopment;
+                   })
+                   .ConfigureServices((hostContext, services) =>
+                   {
+                       services.AddOptions();
+                       services.Configure<JobSchedules>(hostContext.Configuration.GetSection("JobSchedules"));
+                       services.AddTransient<IJobSchedulesProvider, JobSchedulesProvider>();
 
-                           if (env.IsDevelopment())
-                           {
-                               builder.AddUserSecrets<ServiceWorker>();
-                           }
+                       services.AddHostedService<ServiceWorker>();
 
-                           context.Configuration = builder.Build();
-                       })
-                       .ConfigureLogging((context, builder) =>
-                       {
-                           builder.ClearProviders();
-                           builder.AddSerilog(Log.Logger);
-                       })
-                       .ConfigureServices((hostContext, services) =>
-                       {
-                           services.AddOptions();
-                           services.Configure<JobSchedules>(hostContext.Configuration.GetSection("JobSchedules"));
-                           services.AddTransient<IJobSchedulesProvider, JobSchedulesProvider>();
+                       services.AddSingleton<IJobFactory, JobFactory>();
+                       services.AddSingleton<ISchedulerFactory, SchedulerFactory>();
+                       services.AddSingleton<QuartzJobRunner>();
+                       services.AddSingleton<ILogProvider, QuartzLogProvider>();
 
-                           services.AddHostedService<ServiceWorker>();
-
-                           services.AddSingleton<IJobFactory, JobFactory>();
-                           services.AddSingleton<ISchedulerFactory, SchedulerFactory>();
-                           services.AddSingleton<QuartzJobRunner>();
-                           services.AddSingleton<ILogProvider, QuartzLogProvider>();
-
-                           services.AddTransient<UpdateTriggerJob>();
-                           services.AddTransient<SubmitCommandsJob>();
-                           services.AddTransient<GetCommandsJob>();
-                       })
-                       .ConfigureWebHostDefaults(webBuilder =>
-                       {
-                           webBuilder.UseStartup<Startup>();
-                       });
+                       services.AddTransient<UpdateTriggersJob>();
+                       services.AddTransient<RequestBreedingValuesJob>();
+                       services.AddTransient<UpdateAnimalDataJob>();
+                   })
+                   .ConfigureWebHostDefaults(webBuilder =>
+                   {
+                       webBuilder.UseStartup<Startup>();
+                   });
         }
     }
 }

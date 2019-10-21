@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -7,15 +8,16 @@ using Worker.Core;
 namespace Worker.Jobs
 {
     [DisallowConcurrentExecution]
-    public class UpdateTriggerJob : IJob
+    public class UpdateTriggersJob : IJob
     {
         private readonly IJobSchedulesProvider _jobSchedulesProvider;
-        private readonly ILogger<UpdateTriggerJob> _logger;
+        private readonly ILogger<UpdateTriggersJob> _logger;
         private readonly ISchedulerFactory _schedulerFactory;
+        private CancellationToken _cancellationToken;
 
-        public UpdateTriggerJob(ISchedulerFactory schedulerFactory,
+        public UpdateTriggersJob(ISchedulerFactory schedulerFactory,
                                 IJobSchedulesProvider jobSchedulesProvider,
-                                ILogger<UpdateTriggerJob> logger)
+                                ILogger<UpdateTriggersJob> logger)
         {
             _schedulerFactory = schedulerFactory;
             _jobSchedulesProvider = jobSchedulesProvider;
@@ -24,14 +26,17 @@ namespace Worker.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
-            IScheduler scheduler = await _schedulerFactory.GetScheduler().ConfigureAwait(false);
+            _cancellationToken = context.CancellationToken;
+            
+            IScheduler scheduler = await _schedulerFactory.GetScheduler(_cancellationToken).ConfigureAwait(false);
 
             foreach (JobSchedule jobSchedule in _jobSchedulesProvider.Jobs)
             {
                 TriggerKey triggerKey = new TriggerKey($"{jobSchedule.Type.FullName}.trigger");
-                CronTriggerImpl trigger = await scheduler.GetTrigger(triggerKey).ConfigureAwait(false) as CronTriggerImpl;
+                CronTriggerImpl trigger = await scheduler.GetTrigger(triggerKey, _cancellationToken).ConfigureAwait(false) as CronTriggerImpl;
 
-                if (trigger.CronExpressionString == jobSchedule.Cron)
+                if (trigger != null && 
+                    trigger.CronExpressionString == jobSchedule.Cron)
                 {
                     continue;
                 }
@@ -40,7 +45,7 @@ namespace Worker.Jobs
 
                 trigger.CronExpressionString = jobSchedule.Cron;
 
-                await scheduler.RescheduleJob(triggerKey, trigger).ConfigureAwait(false);
+                await scheduler.RescheduleJob(triggerKey, trigger, _cancellationToken).ConfigureAwait(false);
             }
         }
     }

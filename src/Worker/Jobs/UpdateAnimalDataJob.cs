@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -7,12 +8,13 @@ using Quartz;
 namespace Worker.Jobs
 {
     [DisallowConcurrentExecution]
-    public class SubmitCommandsJob : IJob, IDisposable
+    public class UpdateAnimalDataJob : IJob, IDisposable
     {
-        private readonly ILogger<SubmitCommandsJob> _logger;
+        private readonly ILogger<UpdateAnimalDataJob> _logger;
         private string _jobName;
+        private CancellationToken _cancellationToken;
 
-        public SubmitCommandsJob(ILogger<SubmitCommandsJob> logger)
+        public UpdateAnimalDataJob(ILogger<UpdateAnimalDataJob> logger)
         {
             _logger = logger;
         }
@@ -25,13 +27,10 @@ namespace Worker.Jobs
 
         public Task Execute(IJobExecutionContext context)
         {
-            if (context == null)
-            {
-                throw new ArgumentNullException(nameof(context));
-            }
+            _cancellationToken = context.CancellationToken;
 
             _jobName = context.JobDetail.Description;
-            var lastRun = context.PreviousFireTimeUtc?.DateTime.ToLocalTime().ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+            string lastRun = context.PreviousFireTimeUtc?.DateTime.ToLocalTime().ToString(CultureInfo.InvariantCulture) ?? string.Empty;
             _logger.LogInformation("Greetings from {jobName}! Previous run: {lastRun}", _jobName, lastRun);
 
             return Task.CompletedTask;

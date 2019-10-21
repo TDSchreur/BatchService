@@ -15,14 +15,14 @@ namespace Worker.Core
             {
                 switch (value)
                 {
-                    case "SubmitCommandsJob":
-                        Type = typeof(SubmitCommandsJob);
+                    case "RequestBreedingValues":
+                        Type = typeof(RequestBreedingValuesJob);
                         break;
-                    case "GetCommandsJob":
-                        Type = typeof(GetCommandsJob);
+                    case "UpdateAnimalData":
+                        Type = typeof(UpdateAnimalDataJob);
                         break;
-                    case "UpdateTriggerJob":
-                        Type = typeof(UpdateTriggerJob);
+                    case "UpdateTriggers":
+                        Type = typeof(UpdateTriggersJob);
                         break;
                     default:
                         throw new ConfigurationErrorsException("Unknow Jobname");
@@ -34,6 +34,6 @@ namespace Worker.Core
 
         public string Cron { get; set; }
 
-        public Type Type { get; set; }
+        public Type Type { get; private set; }
     }
 }

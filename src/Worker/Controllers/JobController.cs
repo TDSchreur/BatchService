@@ -27,7 +27,7 @@ namespace Worker.Controllers
         public ActionResult<IEnumerable<JobModel>> Get()
         {
             List<JobModel> jobs = _jobSchedulesProvider.Jobs
-                                                       .Where(x => x.Type != typeof(UpdateTriggerJob))
+                                                       .Where(x => x.Type != typeof(UpdateTriggersJob))
                                                        .Select(x => new JobModel {Name = x.Name, Cron = x.Cron})
                                                        .ToList();
 
