@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -91,14 +90,15 @@ namespace Worker
                        services.AddSingleton<QuartzJobRunner>();
                        services.AddSingleton<ILogProvider, QuartzLogProvider>();
 
-                       services.AddTransient<UpdateTriggersJob>();
+                       //services.AddTransient<UpdateTriggersJob>();
                        services.AddTransient<RequestBreedingValuesJob>();
-                       services.AddTransient<UpdateAnimalDataJob>();
+                       //services.AddTransient<UpdateAnimalDataJob>();
                    })
-                   .ConfigureWebHostDefaults(webBuilder =>
-                   {
-                       webBuilder.UseStartup<Startup>();
-                   });
+                   //.ConfigureWebHostDefaults(webBuilder =>
+                   //{
+                   //    webBuilder.UseStartup<Startup>();
+                   //})
+                   ;
         }
     }
 }

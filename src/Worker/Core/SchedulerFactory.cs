@@ -11,7 +11,7 @@ namespace Worker.Core
     {
         private readonly IJobFactory _jobFactory;
         private readonly ILogProvider _logProvider;
-        private IScheduler _scheduler;
+        private IScheduler _scheduler = default!;
 
         public SchedulerFactory(ILogProvider logProvider, IJobFactory jobFactory)
         {

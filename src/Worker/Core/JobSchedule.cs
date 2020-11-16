@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Configuration;
 using Worker.Jobs;
 
 namespace Worker.Core
 {
+#nullable disable
     public class JobSchedule
     {
         private string _name;
@@ -18,12 +19,12 @@ namespace Worker.Core
                     case "RequestBreedingValues":
                         Type = typeof(RequestBreedingValuesJob);
                         break;
-                    case "UpdateAnimalData":
-                        Type = typeof(UpdateAnimalDataJob);
-                        break;
-                    case "UpdateTriggers":
-                        Type = typeof(UpdateTriggersJob);
-                        break;
+                    //case "UpdateAnimalData":
+                    //    Type = typeof(UpdateAnimalDataJob);
+                    //    break;
+                    //case "UpdateTriggers":
+                    //    Type = typeof(UpdateTriggersJob);
+                    //    break;
                     default:
                         throw new ConfigurationErrorsException("Unknow Jobname");
                 }
@@ -36,4 +37,5 @@ namespace Worker.Core
 
         public Type Type { get; private set; }
     }
+#nullable restore
 }

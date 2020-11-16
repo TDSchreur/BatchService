@@ -11,7 +11,7 @@ namespace Worker.Jobs
     public class RequestBreedingValuesJob : IJob, IDisposable
     {
         private readonly ILogger<RequestBreedingValuesJob> _logger;
-        private string _jobName;
+        private string _jobName = string.Empty;
         private CancellationToken _cancellationToken;
 
         public RequestBreedingValuesJob(ILogger<RequestBreedingValuesJob> logger)
@@ -27,9 +27,14 @@ namespace Worker.Jobs
 
         public async Task Execute(IJobExecutionContext context)
         {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
             _cancellationToken = context.CancellationToken;
 
-            _jobName = context.JobDetail.Description;
+            _jobName = context.JobDetail.Description ?? string.Empty;
             var lastRun = context.PreviousFireTimeUtc?.DateTime.ToLocalTime().ToString(CultureInfo.InvariantCulture) ?? string.Empty;
             _logger.LogInformation("Greetings from {jobName}! Previous run: {lastRun}", _jobName, lastRun);
             
@@ -37,10 +42,10 @@ namespace Worker.Jobs
             
             // Check to see if de job gets killed 20sec after cancellation is requested
             // See ServiceWorker.cs
-            for (int i = 0; true; i++)
+            while(!_cancellationToken.IsCancellationRequested)
             {
-                await Task.Delay(2000);
-                _logger.LogInformation($"Still working {i}. Cancellation requested: {_cancellationToken.IsCancellationRequested}");
+                await Task.Delay(2000, _cancellationToken);
+                _logger.LogInformation($"Still working. Cancellation requested: {_cancellationToken.IsCancellationRequested}");
             }
             _logger.LogInformation("Work in done!!!");
         }

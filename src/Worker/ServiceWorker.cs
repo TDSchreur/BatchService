@@ -15,7 +15,7 @@ namespace Worker
         private readonly ILogger<ServiceWorker> _logger;
         private readonly ISchedulerFactory _schedulerFactory;
 
-        private IScheduler _scheduler;
+        private IScheduler _scheduler = default!;
 
         public ServiceWorker(ISchedulerFactory schedulerFactory,
                              IJobSchedulesProvider jobSchedulesProvider,
@@ -75,7 +75,7 @@ namespace Worker
         {
             Type jobType = schedule.Type;
             return JobBuilder.Create(jobType)
-                             .WithIdentity(jobType.FullName)
+                             .WithIdentity(jobType.FullName ?? "DefaultIdentity")
                              .WithDescription(jobType.Name)
                              .Build();
         }
