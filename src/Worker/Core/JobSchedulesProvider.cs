@@ -8,14 +8,14 @@ namespace Worker.Core
     {
         private readonly JobSchedules _jobSchedules;
 
-        public JobSchedulesProvider(IOptionsMonitor<JobSchedules> jobConfig)
+        public JobSchedulesProvider(IOptions<JobSchedules> jobConfig)
         {
             if (jobConfig is null)
             {
                 throw new ArgumentNullException(nameof(jobConfig));
             }
 
-            _jobSchedules = jobConfig.CurrentValue;
+            _jobSchedules = jobConfig.Value;
         }
 
         public IReadOnlyList<JobSchedule> Jobs => _jobSchedules.Jobs;

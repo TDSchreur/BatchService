@@ -19,6 +19,8 @@ namespace Worker.Core
             return _serviceProvider.GetRequiredService<QuartzJobRunner>();
         }
 
-        public void ReturnJob(IJob job) { }
+        public void ReturnJob(IJob job)
+        {
+        }
     }
 }

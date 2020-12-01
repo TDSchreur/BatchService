@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -45,30 +46,18 @@ namespace Worker
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            if (_scheduler != null)
-            {
-                var runningJobs = await _scheduler.GetCurrentlyExecutingJobs(cancellationToken);
+            var runningJobs = await _scheduler.GetCurrentlyExecutingJobs(cancellationToken);
 
-                var tasks = runningJobs.Select(job => _scheduler.Interrupt(job.JobDetail.Key, cancellationToken))
-                                       .Cast<Task>()
-                                       .ToList();
+            var tasks = runningJobs.Select(job => _scheduler.Interrupt(job.JobDetail.Key, cancellationToken))
+                                   .Cast<Task>()
+                                   .ToList();
 
-                await Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
 
-                var shutdown = _scheduler.Shutdown(true, cancellationToken);
+            var shutdown = _scheduler.Shutdown(true, cancellationToken);
 
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-                await Task.WhenAny(shutdown, Task.Delay(Timeout.Infinite, cts.Token));
-            }
-        }
-
-        private static ITrigger CreateTrigger(JobSchedule schedule)
-        {
-            return TriggerBuilder.Create()
-                                 .WithIdentity($"{schedule.Type.FullName}.trigger")
-                                 .WithCronSchedule(schedule.Cron)
-                                 .WithDescription(schedule.Cron)
-                                 .Build();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            await Task.WhenAny(shutdown, Task.Delay(Timeout.Infinite, cts.Token));
         }
 
         private static IJobDetail CreateJob(JobSchedule schedule)
@@ -78,6 +67,15 @@ namespace Worker
                              .WithIdentity(jobType.FullName ?? "DefaultIdentity")
                              .WithDescription(jobType.Name)
                              .Build();
+        }
+
+        private static ITrigger CreateTrigger(JobSchedule schedule)
+        {
+            return TriggerBuilder.Create()
+                                 .WithIdentity($"{schedule.Type.FullName}.trigger")
+                                 .WithCronSchedule(schedule.Cron)
+                                 .WithDescription(schedule.Cron)
+                                 .Build();
         }
     }
 }

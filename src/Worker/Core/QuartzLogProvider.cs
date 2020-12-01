@@ -24,16 +24,16 @@ namespace Worker.Core
                     return true;
                 }
 
-                LogLevel logLevel = level switch
-                    {
-                    QuartzLogLevel.Trace => LogLevel.Trace,
-                    QuartzLogLevel.Debug => LogLevel.Debug,
-                    QuartzLogLevel.Info => LogLevel.Information,
-                    QuartzLogLevel.Warn => LogLevel.Warning,
-                    QuartzLogLevel.Error => LogLevel.Error,
-                    QuartzLogLevel.Fatal => LogLevel.Critical,
-                    _ => throw new ArgumentOutOfRangeException(nameof(level), level, null),
-                    };
+                var logLevel = level switch
+                               {
+                                   QuartzLogLevel.Trace => LogLevel.Trace,
+                                   QuartzLogLevel.Debug => LogLevel.Debug,
+                                   QuartzLogLevel.Info => LogLevel.Information,
+                                   QuartzLogLevel.Warn => LogLevel.Warning,
+                                   QuartzLogLevel.Error => LogLevel.Error,
+                                   QuartzLogLevel.Fatal => LogLevel.Critical,
+                                   _ => throw new ArgumentOutOfRangeException(nameof(level), level, null)
+                               };
 
                 _logger.Log(logLevel, exception, func(), parameters);
 
@@ -41,12 +41,12 @@ namespace Worker.Core
             };
         }
 
-        public IDisposable OpenNestedContext(string message)
+        public IDisposable OpenMappedContext(string key, object value, bool destructure = false)
         {
             throw new NotImplementedException();
         }
 
-        public IDisposable OpenMappedContext(string key, object value, bool destructure = false)
+        public IDisposable OpenNestedContext(string message)
         {
             throw new NotImplementedException();
         }

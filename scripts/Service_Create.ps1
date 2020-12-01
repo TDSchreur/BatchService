@@ -1,0 +1,1 @@
+New-Service -Name SnapShotService -BinaryPathName "C:\Service\Worker.exe" -StartupType Automatic

@@ -9,6 +9,8 @@ namespace Worker.Core
     {
         private string _name;
 
+        public string Cron { get; set; }
+
         public string Name
         {
             get => _name;
@@ -16,8 +18,8 @@ namespace Worker.Core
             {
                 switch (value)
                 {
-                    case "RequestBreedingValues":
-                        Type = typeof(RequestBreedingValuesJob);
+                    case nameof(MakeSnapshotJob):
+                        Type = typeof(MakeSnapshotJob);
                         break;
                     //case "UpdateAnimalData":
                     //    Type = typeof(UpdateAnimalDataJob);
@@ -32,8 +34,6 @@ namespace Worker.Core
                 _name = value;
             }
         }
-
-        public string Cron { get; set; }
 
         public Type Type { get; private set; }
     }

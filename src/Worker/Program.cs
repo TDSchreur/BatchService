@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,14 +20,14 @@ namespace Worker
     {
         public static async Task<int> Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                         .Enrich.FromLogContext()
-                         .MinimumLevel.Information()
-                         .WriteTo.Console(
-                             outputTemplate:
-                             "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}",
-                             theme: AnsiConsoleTheme.Literate)
-                         .CreateLogger();
+            //Log.Logger = new LoggerConfiguration()
+            //            .Enrich.FromLogContext()
+            //            .MinimumLevel.Information()
+            //            .WriteTo.Console(
+            //                             outputTemplate:
+            //                             "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}",
+            //                             theme: AnsiConsoleTheme.Literate)
+            //            .CreateLogger();
 
             try
             {
@@ -45,17 +46,15 @@ namespace Worker
             return 0;
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
         {
-            return new HostBuilder() //Host//.CreateDefaultBuilder(args)
-                   .UseContentRoot(Directory.GetCurrentDirectory())
-                   .UseWindowsService()
-                   .ConfigureAppConfiguration((context, builder) =>
+            return new HostBuilder()
+                  .UseWindowsService()
+                  .ConfigureAppConfiguration((context, builder) =>
                    {
                        IHostEnvironment env = context.HostingEnvironment;
 
-                       builder.AddJsonFile("appsettings.json", false, true)
-                              .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+                       builder.AddJsonFile("appsettings.json", false, false)
                               .AddEnvironmentVariables()
                               .AddCommandLine(args);
 
@@ -66,39 +65,59 @@ namespace Worker
 
                        context.Configuration = builder.Build();
                    })
-                   .ConfigureLogging((context, builder) =>
+                  .ConfigureLogging((context, builder) =>
                    {
                        builder.ClearProviders();
+
+                       Log.Logger = new LoggerConfiguration()
+                                   .Enrich.FromLogContext()
+                                   .MinimumLevel.Information()
+                                   .WriteTo.File(path: Path.Combine(context.HostingEnvironment.ContentRootPath, "log.txt"),
+                                                 rollingInterval: RollingInterval.Day)
+                                   .WriteTo.Console(
+                                                    outputTemplate:
+                                                    "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}",
+                                                    theme: AnsiConsoleTheme.Literate)
+                                   .CreateLogger();
+
+
                        builder.AddSerilog(Log.Logger);
                    })
-                   .UseDefaultServiceProvider((context, options) =>
+                  .UseDefaultServiceProvider((context, options) =>
                    {
                        var isDevelopment = context.HostingEnvironment.IsDevelopment();
                        options.ValidateScopes = isDevelopment;
                        options.ValidateOnBuild = isDevelopment;
                    })
-                   .ConfigureServices((hostContext, services) =>
+                  .ConfigureServices((hostContext, services) =>
                    {
+                       // Core
                        services.AddOptions();
                        services.Configure<JobSchedules>(hostContext.Configuration.GetSection("JobSchedules"));
-                       services.AddTransient<IJobSchedulesProvider, JobSchedulesProvider>();
-
+                       services.AddScoped<IJobSchedulesProvider, JobSchedulesProvider>();
                        services.AddHostedService<ServiceWorker>();
 
+                       // Quartz
                        services.AddSingleton<IJobFactory, JobFactory>();
                        services.AddSingleton<ISchedulerFactory, SchedulerFactory>();
                        services.AddSingleton<QuartzJobRunner>();
                        services.AddSingleton<ILogProvider, QuartzLogProvider>();
 
-                       //services.AddTransient<UpdateTriggersJob>();
-                       services.AddTransient<RequestBreedingValuesJob>();
-                       //services.AddTransient<UpdateAnimalDataJob>();
-                   })
-                   //.ConfigureWebHostDefaults(webBuilder =>
-                   //{
-                   //    webBuilder.UseStartup<Startup>();
-                   //})
-                   ;
+                       // Jobs
+                       services.AddTransient<MakeSnapshotJob>();
+
+                       // Service agents
+                       services.AddHttpClient<IMakeSnapshotServiceAgent, MakeSnapshotServiceAgent>(x => x.BaseAddress = hostContext.Configuration.GetValue<Uri>("Url"))
+                       //    .ConfigurePrimaryHttpMessageHandler(() =>
+                       //    {
+                       //        return new HttpClientHandler
+                       //        {
+                       //            Proxy = new System.Net.WebProxy("http://192.168.199.2:8080"),
+                       //            UseProxy = true
+                       //        };
+                       //    })
+                       ;
+                   });
         }
     }
 }
